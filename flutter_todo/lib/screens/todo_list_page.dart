@@ -1,5 +1,4 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class TodoListPage extends StatelessWidget {
@@ -14,6 +13,17 @@ class TodoListPage extends StatelessWidget {
       },
     );
     _textController.text = "";
+  }
+
+  Widget _buildList(QuerySnapshot snapshot) {
+    return ListView.builder(
+        itemCount: snapshot.docs.length,
+        itemBuilder: (context, index) {
+          final doc = snapshot.docs[index];
+          return ListTile(
+            title: Text(doc["title"]),
+          );
+        });
   }
 
   @override
@@ -34,59 +44,59 @@ class TodoListPage extends StatelessWidget {
   }
 
   Widget _buildBody(BuildContext context) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          const SizedBox(
-            height: 25,
+    return Column(
+      children: [
+        const SizedBox(
+          height: 25,
+        ),
+        const Text(
+          'Adwuma',
+          style: TextStyle(fontSize: 30),
+        ),
+        const SizedBox(
+          height: 25,
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _textController,
+                  decoration: const InputDecoration(hintText: 'Add task...'),
+                ),
+              )
+            ],
           ),
-          const Text(
-            'Adwuma',
-            style: TextStyle(fontSize: 30),
-          ),
-          const SizedBox(
-            height: 25,
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: const InputDecoration(hintText: 'Add task...'),
-                  ),
-                )
-              ],
+        ),
+        const SizedBox(
+          height: 20,
+        ),
+        MaterialButton(
+          color: Colors.orange,
+          onPressed: () {
+            _addTask();
+          },
+          child: const Text(
+            'Add Task',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(
-            height: 20,
-          ),
-          MaterialButton(
-            color: Colors.orange,
-            onPressed: () {
-              _addTask();
-            },
-            child: const Text(
-              'Add Task',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          ListView.builder(
-            shrinkWrap: true,
-            itemBuilder: (context, index) {
-              return const ListTile(
-                title: Text("Your task here..."),
-              );
-            },
-            itemCount: 20,
-          ),
-        ],
-      ),
+        ),
+        StreamBuilder<QuerySnapshot>(
+          stream: FirebaseFirestore.instance.collection("todos").snapshots(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const LinearProgressIndicator();
+            }
+            return Expanded(
+              child: _buildList(snapshot.data!),
+            );
+          },
+        ),
+      ],
     );
   }
 }
