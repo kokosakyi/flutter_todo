@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_todo/models/task_model.dart';
 
 class TodoListPage extends StatelessWidget {
   TodoListPage({Key? key}) : super(key: key);
@@ -15,13 +16,37 @@ class TodoListPage extends StatelessWidget {
     _textController.text = "";
   }
 
+  void _deleteTask(Task task) async {
+    await FirebaseFirestore.instance
+        .collection("todos")
+        .doc(task.taskId)
+        .delete();
+  }
+
+  Widget _buildListItem(Task task) {
+    return Dismissible(
+      key: Key(task.taskId!),
+      onDismissed: (direction) {
+        _deleteTask(task);
+      },
+      background: Container(
+        color: Colors.pink,
+      ),
+      child: ListTile(
+        title: Text(task.title),
+      ),
+    );
+  }
+
   Widget _buildList(QuerySnapshot snapshot) {
     return ListView.builder(
         itemCount: snapshot.docs.length,
         itemBuilder: (context, index) {
           final doc = snapshot.docs[index];
+          final task = Task.fromDocumentSnapshot(doc);
+          return _buildListItem(task);
           return ListTile(
-            title: Text(doc["title"]),
+            title: Text(task.title),
           );
         });
   }
